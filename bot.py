@@ -114,8 +114,8 @@ async def monitor_new_pinned_message(c: Client, m: Message):
     if str(m.chat.id) not in groups:
         return
     channel_id = groups[str(m.chat.id)]
-    channel_id_tapi = str(channel_id).removeprefix('-100')
-    await c.send_message(channel_id, 'https://t.me/c/{}/{}'.format(channel_id_tapi, m.pinned_message.id))
+    chat_id_tapi = str(m.chat.id).removeprefix('-100')
+    await c.send_message(channel_id, 'https://t.me/c/{}/{}'.format(chat_id_tapi, m.pinned_message.id))
     await m.pinned_message.forward(channel_id, True)
 
 
