@@ -9,3 +9,5 @@ proxy = {
 # proxy = None
 
 admin_id = 0
+
+send_message_link = False

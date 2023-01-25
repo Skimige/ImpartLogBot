@@ -7,7 +7,7 @@ from pyrogram.enums import ChatMemberStatus, MessagesFilter, ParseMode
 from pyrogram.handlers import MessageHandler
 from pyrogram.types import Message
 
-from config import api_id, api_hash, proxy, admin_id
+from config import api_id, api_hash, proxy, admin_id, send_message_link
 
 
 # Init groups config
@@ -101,13 +101,20 @@ async def initialize_group_channel(c: Client, m: Message):
         await m.reply_text('请先使用 /set_channel 设置目标频道。')
         return
 
+    messages = []
+    async for message in c.search_messages(m.chat.id, filter=MessagesFilter.PINNED):
+        messages.append(message.id)
+    messages.sort()
+
     channel_id = groups[str(m.chat.id)]
     channel_id_tapi = str(channel_id).removeprefix('-100')
-    async for message in c.search_messages(m.chat.id, filter=MessagesFilter.PINNED):
-        await c.send_message(channel_id, 'https://t.me/c/{}/{}'.format(channel_id_tapi, message.id))
-        await m.forward(channel_id, True)
+    for message_id in messages:
+        if send_message_link:
+            await c.send_message(channel_id, 'https://t.me/c/{}/{}'.format(channel_id_tapi, message_id))
+        await bot.forward_messages(channel_id, m.chat.id, message_id, True)
 
     await m.reply_text('已将置顶消息全部转发到目标频道。')
+    del messages
 
 
 async def monitor_new_pinned_message(c: Client, m: Message):
@@ -115,7 +122,8 @@ async def monitor_new_pinned_message(c: Client, m: Message):
         return
     channel_id = groups[str(m.chat.id)]
     chat_id_tapi = str(m.chat.id).removeprefix('-100')
-    await c.send_message(channel_id, 'https://t.me/c/{}/{}'.format(chat_id_tapi, m.pinned_message.id))
+    if send_message_link:
+        await c.send_message(channel_id, 'https://t.me/c/{}/{}'.format(chat_id_tapi, m.pinned_message.id))
     await m.pinned_message.forward(channel_id, True)
 
 
